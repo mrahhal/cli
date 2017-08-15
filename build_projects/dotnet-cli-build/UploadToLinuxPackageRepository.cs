@@ -53,40 +53,58 @@ namespace Microsoft.DotNet.Cli.Build
 
         public override bool Execute()
         {
-            return ExecuteAsync().GetAwaiter().GetResult();
+            ExecuteAsyncWithRetry().GetAwaiter().GetResult();
+            return true;
         }
 
-        public async Task<bool> ExecuteAsync()
+        private async System.Threading.Tasks.Task ExecuteAsyncWithRetry()
         {
-            var linuxPackageRepositoryDestiny =
-                new LinuxPackageRepositoryDestiny(Username, Password, Server, RepositoryId);
-            var uploadResponse = await new LinuxPackageRepositoryHttpPrepare(
-                linuxPackageRepositoryDestiny,
-                new FileUploadStrategy(PathOfPackageToUpload)).RemoteCall();
+            await ExponentialRetry.ExecuteWithRetry(
+                UploadAndAddpackageAndEnsureItIsReady,
+                s => s == "",
+                maxRetryCount: 3,
+                timer: () => ExponentialRetry.Timer(ExponentialRetry.Intervals),
+                taskDescription: $"running {nameof(UploadAndAddpackageAndEnsureItIsReady)}");
+        }
 
-            var idInRepositoryService = new IdInRepositoryService(JObject.Parse(uploadResponse)["id"].ToString());
+        public async Task<string> UploadAndAddpackageAndEnsureItIsReady()
+        {
+            try
+            {
+                var linuxPackageRepositoryDestiny =
+                    new LinuxPackageRepositoryDestiny(Username, Password, Server, RepositoryId);
+                var uploadResponse = await new LinuxPackageRepositoryHttpPrepare(
+                    linuxPackageRepositoryDestiny,
+                    new FileUploadStrategy(PathOfPackageToUpload)).RemoteCall();
 
-            var addPackageResponse = await new LinuxPackageRepositoryHttpPrepare(
-                linuxPackageRepositoryDestiny,
-                new AddPackageStrategy(
-                    idInRepositoryService,
-                    PackageNameInLinuxPackageRepository,
-                    PackageVersionInLinuxPackageRepository,
-                    linuxPackageRepositoryDestiny.RepositoryId)).RemoteCall();
+                var idInRepositoryService = new IdInRepositoryService(JObject.Parse(uploadResponse)["id"].ToString());
 
-            var queueResourceLocation = new QueueResourceLocation(addPackageResponse);
+                var addPackageResponse = await new LinuxPackageRepositoryHttpPrepare(
+                    linuxPackageRepositoryDestiny,
+                    new AddPackageStrategy(
+                        idInRepositoryService,
+                        PackageNameInLinuxPackageRepository,
+                        PackageVersionInLinuxPackageRepository,
+                        linuxPackageRepositoryDestiny.RepositoryId)).RemoteCall();
 
-            Func<Task<string>> pullQueuedPackageStatus = new LinuxPackageRepositoryHttpPrepare(
-                linuxPackageRepositoryDestiny,
-                new PullQueuedPackageStatus(queueResourceLocation)).RemoteCall;
+                var queueResourceLocation = new QueueResourceLocation(addPackageResponse);
 
-            ExponentialRetry.ExecuteWithRetry(
-                pullQueuedPackageStatus,
-                s => s == "fileReady",
-                5,
-                () => ExponentialRetry.Timer(ExponentialRetry.Intervals),
-                "testing retry").Wait();
-            return true;
+                Func<Task<string>> pullQueuedPackageStatus = new LinuxPackageRepositoryHttpPrepare(
+                    linuxPackageRepositoryDestiny,
+                    new PullQueuedPackageStatus(queueResourceLocation)).RemoteCall;
+
+                await ExponentialRetry.ExecuteWithRetry(
+                    pullQueuedPackageStatus,
+                    s => s == "fileReady",
+                    5,
+                    () => ExponentialRetry.Timer(ExponentialRetry.Intervals),
+                    $"PullQueuedPackageStatus location: {queueResourceLocation.Location}");
+                return "";
+            }
+            catch (FailedToAddPackageToPackageRepositoryException e)
+            {
+                return e.ToString();
+            }
         }
     }
 
