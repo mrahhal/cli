@@ -5,34 +5,34 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
 using System.Linq;
 using System.Net.Http;
-using Microsoft.Build.Framework;
-using Task = Microsoft.Build.Utilities.Task;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Threading.Tasks;
+using Microsoft.Build.Framework;
 using Newtonsoft.Json.Linq;
 using NuGet.Protocol;
+using Task = Microsoft.Build.Utilities.Task;
 
 namespace Microsoft.DotNet.Cli.Build
 {
     public class UploadToLinuxPackageRepository : Task
     {
         /// <summary>
-        /// The Azure repository service user name.
+        ///     The Azure repository service user name.
         /// </summary>
         [Required]
         public string Username { get; set; }
 
         /// <summary>
-        /// The Azure repository service Password.
+        ///     The Azure repository service Password.
         /// </summary>
         [Required]
         public string Password { get; set; }
 
         /// <summary>
-        /// The Azure repository service URL ex: "tux-devrepo.corp.microsoft.com".
+        ///     The Azure repository service URL ex: "tux-devrepo.corp.microsoft.com".
         /// </summary>
         [Required]
         public string Server { get; set; }
@@ -58,7 +58,8 @@ namespace Microsoft.DotNet.Cli.Build
 
         public async Task<bool> ExecuteAsync()
         {
-            var linuxPackageRepositoryDestiny = new LinuxPackageRepositoryDestiny(Username, Password, Server, RepositoryId);
+            var linuxPackageRepositoryDestiny =
+                new LinuxPackageRepositoryDestiny(Username, Password, Server, RepositoryId);
             var uploadResponse = await new LinuxPackageRepositoryHttpPrepare(
                 linuxPackageRepositoryDestiny,
                 new FileUploadStrategy(PathOfPackageToUpload)).RemoteCall();
@@ -81,8 +82,8 @@ namespace Microsoft.DotNet.Cli.Build
 
             ExponentialRetry.ExecuteWithRetry(
                 pullQueuedPackageStatus,
-                (s) => s == "fileReady",
-                4,
+                s => s == "fileReady",
+                5,
                 () => ExponentialRetry.Timer(ExponentialRetry.Intervals),
                 "testing retry").Wait();
             return true;
@@ -91,10 +92,9 @@ namespace Microsoft.DotNet.Cli.Build
 
     public class LinuxPackageRepositoryDestiny
     {
-        public string RepositoryId { get; }
-        private readonly string _username;
         private readonly string _password;
         private readonly string _server;
+        private readonly string _username;
 
         public LinuxPackageRepositoryDestiny(string username,
             string password,
@@ -107,6 +107,8 @@ namespace Microsoft.DotNet.Cli.Build
             RepositoryId = repositoryId ?? throw new ArgumentNullException(nameof(repositoryId));
         }
 
+        public string RepositoryId { get; }
+
         public Uri GetBaseAddress()
         {
             return new Uri($"https://{_server}");
@@ -115,21 +117,21 @@ namespace Microsoft.DotNet.Cli.Build
         public string GetSimpleAuth()
         {
             return $"{_username}:{_password}";
-        }        
+        }
     }
 
     public class LinuxPackageRepositoryHttpPrepare
     {
-        private readonly LinuxPackageRepositoryDestiny _linuxPackageRepositoryDestiny;
         private readonly IAzurelinuxRepositoryServiceHttpStrategy _httpStrategy;
+        private readonly LinuxPackageRepositoryDestiny _linuxPackageRepositoryDestiny;
 
         public LinuxPackageRepositoryHttpPrepare(
-          LinuxPackageRepositoryDestiny linuxPackageRepositoryDestiny,
-          IAzurelinuxRepositoryServiceHttpStrategy httpStrategy
-             )
+            LinuxPackageRepositoryDestiny linuxPackageRepositoryDestiny,
+            IAzurelinuxRepositoryServiceHttpStrategy httpStrategy
+        )
         {
-            _linuxPackageRepositoryDestiny = linuxPackageRepositoryDestiny 
-                ?? throw new ArgumentNullException(nameof(linuxPackageRepositoryDestiny));
+            _linuxPackageRepositoryDestiny = linuxPackageRepositoryDestiny
+                                             ?? throw new ArgumentNullException(nameof(linuxPackageRepositoryDestiny));
             _httpStrategy = httpStrategy ?? throw new ArgumentNullException(nameof(httpStrategy));
         }
 
@@ -140,7 +142,8 @@ namespace Microsoft.DotNet.Cli.Build
                 using (var client = new HttpClient(handler))
                 {
                     handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true;
-                    var authHeader = Convert.ToBase64String(Encoding.UTF8.GetBytes(_linuxPackageRepositoryDestiny.GetSimpleAuth()))
+                    var authHeader =
+                        Convert.ToBase64String(Encoding.UTF8.GetBytes(_linuxPackageRepositoryDestiny.GetSimpleAuth()));
                     client.DefaultRequestHeaders.Authorization =
                         new AuthenticationHeaderValue("Basic", authHeader);
                     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
@@ -158,8 +161,8 @@ namespace Microsoft.DotNet.Cli.Build
 
         public FileUploadStrategy(string pathToPackageToUpload)
         {
-            _pathToPackageToUpload = pathToPackageToUpload 
-                ?? throw new ArgumentNullException(nameof(pathToPackageToUpload));
+            _pathToPackageToUpload = pathToPackageToUpload
+                                     ?? throw new ArgumentNullException(nameof(pathToPackageToUpload));
         }
 
         public async Task<string> Execute(HttpClient client, Uri baseAddress)
@@ -167,10 +170,15 @@ namespace Microsoft.DotNet.Cli.Build
             var fileName = Path.GetFileName(_pathToPackageToUpload);
 
             using (var content =
-                       new MultipartFormDataContent())
+                new MultipartFormDataContent())
             {
                 var url = new Uri(baseAddress, "/v1/files");
-                content.Add(new StreamContent(new MemoryStream(File.ReadAllBytes(_pathToPackageToUpload))), "file", fileName);
+                content.Add(
+                    new StreamContent(
+                        new MemoryStream(
+                            File.ReadAllBytes(_pathToPackageToUpload))),
+                    "file",
+                    fileName);
                 using (var message = await client.PostAsync(url, content))
                 {
                     if (!message.IsSuccessStatusCode)
@@ -193,12 +201,12 @@ namespace Microsoft.DotNet.Cli.Build
 
         public AddPackageStrategy(
             IdInRepositoryService idInRepositoryService,
-         string packageName,
-          string packageVersion,
-           string repositoryId)
+            string packageName,
+            string packageVersion,
+            string repositoryId)
         {
-            _idInRepositoryService = idInRepositoryService 
-            ?? throw new ArgumentNullException(nameof(idInRepositoryService));
+            _idInRepositoryService = idInRepositoryService
+                                     ?? throw new ArgumentNullException(nameof(idInRepositoryService));
             _packageName = packageName;
             _packageVersion = packageVersion;
             _repositoryId = repositoryId;
@@ -212,26 +220,23 @@ namespace Microsoft.DotNet.Cli.Build
                 ["version"] = AppendDebianRevisionNumber(_packageVersion),
                 ["fileId"] = _idInRepositoryService.Id,
                 ["repositoryId"] = _repositoryId
-
             }.ToJson();
             var content = new StringContent(debianUploadJsonContent,
-            Encoding.UTF8,
-            "application/json");
+                Encoding.UTF8,
+                "application/json");
 
             using (var response = await client.PostAsync(new Uri(baseAddress, "/v1/packages"), content))
             {
                 if (!response.IsSuccessStatusCode)
-                {
                     throw new FailedToAddPackageToPackageRepositoryException(
                         $"request:{debianUploadJsonContent} response:{response.ToJson()}");
-                }
                 return response.Headers.GetValues("Location").Single();
             }
         }
 
-        private string AppendDebianRevisionNumber(string _packageVersion)
+        private static string AppendDebianRevisionNumber(string packageVersion)
         {
-            return _packageVersion + "-1";
+            return packageVersion + "-1";
         }
     }
 
@@ -239,27 +244,21 @@ namespace Microsoft.DotNet.Cli.Build
     {
         private readonly QueueResourceLocation _queueResourceLocation;
 
-        public PullQueuedPackageStatus(QueueResourceLocation QueueResourceLocation)
+        public PullQueuedPackageStatus(QueueResourceLocation queueResourceLocation)
         {
-            _queueResourceLocation = QueueResourceLocation 
-            ?? throw new ArgumentNullException(nameof(QueueResourceLocation));
+            _queueResourceLocation = queueResourceLocation
+                                     ?? throw new ArgumentNullException(nameof(queueResourceLocation));
         }
 
         public async Task<string> Execute(HttpClient client, Uri baseAddress)
         {
-
             using (var response = await client.GetAsync(new Uri(baseAddress, _queueResourceLocation.Location)))
             {
                 if (!response.IsSuccessStatusCode)
-                {
-                    throw new FailedToAddPackageToPackageRepositoryException("Failed to make request to " + _queueResourceLocation.Location);
-                }
+                    throw new FailedToAddPackageToPackageRepositoryException(
+                        "Failed to make request to " + _queueResourceLocation.Location);
                 var body = await response.Content.ReadAsStringAsync();
-                if (!body.Contains("status"))
-                {
-                    return "";
-                }
-                return JObject.Parse(body)["status"].ToString();
+                return !body.Contains("status") ? "" : JObject.Parse(body)["status"].ToString();
             }
         }
     }
@@ -274,7 +273,8 @@ namespace Microsoft.DotNet.Cli.Build
         {
         }
 
-        public FailedToAddPackageToPackageRepositoryException(string message, Exception innerException) : base(message, innerException)
+        public FailedToAddPackageToPackageRepositoryException(string message, Exception innerException) : base(message,
+            innerException)
         {
         }
     }
@@ -285,7 +285,7 @@ namespace Microsoft.DotNet.Cli.Build
         {
         }
 
-        public RetryFailedException() : base()
+        public RetryFailedException()
         {
         }
 
@@ -301,13 +301,21 @@ namespace Microsoft.DotNet.Cli.Build
 
     public class IdInRepositoryService
     {
-        public IdInRepositoryService(string id) => Id = id ?? throw new ArgumentNullException(nameof(id));
+        public IdInRepositoryService(string id)
+        {
+            Id = id ?? throw new ArgumentNullException(nameof(id));
+        }
+
         public string Id { get; }
     }
 
     public class QueueResourceLocation
     {
-        public QueueResourceLocation(string location) => Location = location ?? throw new ArgumentNullException(nameof(location));
+        public QueueResourceLocation(string location)
+        {
+            Location = location ?? throw new ArgumentNullException(nameof(location));
+        }
+
         public string Location { get; }
     }
 }

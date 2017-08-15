@@ -1,16 +1,23 @@
-﻿using FluentAssertions;
-using Microsoft.DotNet.Cli.Build;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+using FluentAssertions;
+using Microsoft.DotNet.Cli.Build;
 using Xunit;
 
 namespace dotnet_cli_build.Tests
 {
     public class GivenActionAndRetryTimes
     {
+        public static IEnumerable<Task> NoWaitTimer()
+        {
+            while (true)
+            {
+                yield return Task.CompletedTask;
+            }
+        }
+
         [Fact]
         public void ExponentialRetryShouldProvideIntervalSequence()
         {
@@ -27,7 +34,7 @@ namespace dotnet_cli_build.Tests
             var fakeAction = new FakeAction(0);
             ExponentialRetry.ExecuteWithRetry(
                 fakeAction.Run,
-                (s) => s == "success",
+                s => s == "success",
                 10,
                 NoWaitTimer).Wait();
             fakeAction.Count.Should().Be(0);
@@ -39,7 +46,7 @@ namespace dotnet_cli_build.Tests
             var fakeAction = new FakeAction(5);
             ExponentialRetry.ExecuteWithRetry(
                 fakeAction.Run,
-                (s) => s == "success",
+                s => s == "success",
                 10,
                 NoWaitTimer).Wait();
             fakeAction.Count.Should().Be(5);
@@ -51,24 +58,17 @@ namespace dotnet_cli_build.Tests
             var fakeAction = new FakeAction(10);
             Action a = () => ExponentialRetry.ExecuteWithRetry(
                 fakeAction.Run,
-                (s) => s == "success",
+                s => s == "success",
                 5,
                 NoWaitTimer,
                 "testing retry").Wait();
-            a.ShouldThrow<RetryFailedException>().WithMessage("Retry failed for testing retry after 5 times with result: fail");
-        }
-
-        public static IEnumerable<Task> NoWaitTimer()
-        {
-            while (true)
-                yield return Task.CompletedTask;
+            a.ShouldThrow<RetryFailedException>()
+                .WithMessage("Retry failed for testing retry after 5 times with result: fail");
         }
     }
 
     public class FakeAction
     {
-        public int Count { get => _count; }
-        private int _count = 0;
         private readonly int _successAfter;
 
         public FakeAction(int successAfter)
@@ -76,17 +76,17 @@ namespace dotnet_cli_build.Tests
             _successAfter = successAfter;
         }
 
+        public int Count { get; private set; }
+
         public Task<string> Run()
         {
             if (_successAfter == Count)
             {
                 return Task.FromResult("success");
             }
-            else
-            {
-                _count++;
-                return Task.FromResult("fail");
-            }
+
+            Count++;
+            return Task.FromResult("fail");
         }
     }
 }
