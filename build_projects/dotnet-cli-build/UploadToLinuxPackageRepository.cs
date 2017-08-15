@@ -67,7 +67,7 @@ namespace Microsoft.DotNet.Cli.Build
                 taskDescription: $"running {nameof(UploadAndAddpackageAndEnsureItIsReady)}");
         }
 
-        public async Task<string> UploadAndAddpackageAndEnsureItIsReady()
+        private async Task<string> UploadAndAddpackageAndEnsureItIsReady()
         {
             try
             {
@@ -108,7 +108,7 @@ namespace Microsoft.DotNet.Cli.Build
         }
     }
 
-    public class LinuxPackageRepositoryDestiny
+    internal class LinuxPackageRepositoryDestiny
     {
         private readonly string _password;
         private readonly string _server;
@@ -138,7 +138,7 @@ namespace Microsoft.DotNet.Cli.Build
         }
     }
 
-    public class LinuxPackageRepositoryHttpPrepare
+    internal class LinuxPackageRepositoryHttpPrepare
     {
         private readonly IAzurelinuxRepositoryServiceHttpStrategy _httpStrategy;
         private readonly LinuxPackageRepositoryDestiny _linuxPackageRepositoryDestiny;
@@ -173,7 +173,7 @@ namespace Microsoft.DotNet.Cli.Build
         }
     }
 
-    public class FileUploadStrategy : IAzurelinuxRepositoryServiceHttpStrategy
+    internal class FileUploadStrategy : IAzurelinuxRepositoryServiceHttpStrategy
     {
         private readonly string _pathToPackageToUpload;
 
@@ -210,7 +210,7 @@ namespace Microsoft.DotNet.Cli.Build
         }
     }
 
-    public class AddPackageStrategy : IAzurelinuxRepositoryServiceHttpStrategy
+    internal class AddPackageStrategy : IAzurelinuxRepositoryServiceHttpStrategy
     {
         private readonly IdInRepositoryService _idInRepositoryService;
         private readonly string _packageName;
@@ -258,7 +258,7 @@ namespace Microsoft.DotNet.Cli.Build
         }
     }
 
-    public class PullQueuedPackageStatus : IAzurelinuxRepositoryServiceHttpStrategy
+    internal class PullQueuedPackageStatus : IAzurelinuxRepositoryServiceHttpStrategy
     {
         private readonly QueueResourceLocation _queueResourceLocation;
 
@@ -281,7 +281,7 @@ namespace Microsoft.DotNet.Cli.Build
         }
     }
 
-    public class FailedToAddPackageToPackageRepositoryException : Exception
+    internal class FailedToAddPackageToPackageRepositoryException : Exception
     {
         public FailedToAddPackageToPackageRepositoryException(string message) : base(message)
         {
@@ -297,7 +297,7 @@ namespace Microsoft.DotNet.Cli.Build
         }
     }
 
-    public class RetryFailedException : Exception
+    internal class RetryFailedException : Exception
     {
         public RetryFailedException(string message) : base(message)
         {
@@ -312,12 +312,12 @@ namespace Microsoft.DotNet.Cli.Build
         }
     }
 
-    public interface IAzurelinuxRepositoryServiceHttpStrategy
+    internal interface IAzurelinuxRepositoryServiceHttpStrategy
     {
         Task<string> Execute(HttpClient client, Uri baseAddress);
     }
 
-    public class IdInRepositoryService
+    internal class IdInRepositoryService
     {
         public IdInRepositoryService(string id)
         {
@@ -327,7 +327,7 @@ namespace Microsoft.DotNet.Cli.Build
         public string Id { get; }
     }
 
-    public class QueueResourceLocation
+    internal class QueueResourceLocation
     {
         public QueueResourceLocation(string location)
         {
