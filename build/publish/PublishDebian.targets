@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <Target Name="PublishDebFilesToDebianRepo"
-          DependsOnTargets="BuildSdkDeb;"
+          DependsOnTargets="SetupDebProps;"
           Condition=" '$(IsDebianBaseDistro)' == 'True' AND '$(SkipPublishToDebianRepo)' != 'true' AND '$(IslinuxPortable)' != 'true' " >
     <Error Condition="'$(REPO_ID)' == ''" Text="REPO_ID must be set as an environment variable for debian publishing." />
     <Error Condition="'$(REPO_USER)' == ''" Text="REPO_USER must be set as an environment variable for debian publishing." />
