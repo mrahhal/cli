@@ -88,7 +88,7 @@
   <Target Name="TestsForBuildItself">
     <DotNetMSBuild Arguments="/v:diag $(RepoRoot)/test/MsBuildScript.Tests/runtests.target"
                    ToolPath="$(Stage0Directory)" />
-    <DotNetTest ProjectPath="$(RepoRoot)/build_projects/dotnet-cli-build.Tests/dotnet-cli-build.Tests.csproj)"
+    <DotNetTest ProjectPath="$(RepoRoot)/build_projects/dotnet-cli-build.Tests/dotnet-cli-build.Tests.csproj"
                 ToolPath="$(Stage0Directory)" />
   </Target>
 
