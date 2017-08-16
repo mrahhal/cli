@@ -105,6 +105,10 @@ namespace Microsoft.DotNet.Cli.Build
             {
                 return e.ToString();
             }
+            catch (HttpRequestException e)
+            {
+                return e.ToString();
+            }
         }
     }
 

@@ -17,7 +17,8 @@
       Condition=" '$(IsDebianBaseDistro)' == 'True' AND '$(DebuildPresent)'  == 'true' "
       DependsOnTargets="PrepareDotnetDebDirectories;
                         PrepareDotnetDebTool;
-                        DownloadAspNetCoreRuntimeDebInstaller;"
+                        DownloadAspNetCoreRuntimeDebInstaller;
+                        SetupDebProps;"
       Inputs="@(CLISdkFiles)"
       Outputs="$(SdkInstallerFile)" >
 
