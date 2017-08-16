@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Cli.Build
+namespace Microsoft.DotNet.Cli.Build.UploadToLinuxPackageRepository
 {
     public static class ExponentialRetry
     {
