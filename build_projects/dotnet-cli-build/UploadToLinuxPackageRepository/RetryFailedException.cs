@@ -6,7 +6,7 @@ using System;
 
 namespace Microsoft.DotNet.Cli.Build.UploadToLinuxPackageRepository
 {
-    internal class RetryFailedException : Exception
+    public class RetryFailedException : Exception
     {
         public RetryFailedException(string message) : base(message)
         {

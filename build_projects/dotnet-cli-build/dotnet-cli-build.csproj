@@ -31,7 +31,4 @@
     <PackageReference Include="Microsoft.DotNet.VersionTools" Version="$(VersionToolsVersion)" />
  </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="UploadToLinuxPackageRepository\" />
-  </ItemGroup>
 </Project>

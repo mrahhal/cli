@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Microsoft.DotNet.Cli.Build;
+using Microsoft.DotNet.Cli.Build.UploadToLinuxPackageRepository;
 using Xunit;
 
 namespace dotnet_cli_build.Tests

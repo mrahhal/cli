@@ -6,7 +6,7 @@ using System;
 
 namespace Microsoft.DotNet.Cli.Build.UploadToLinuxPackageRepository
 {
-    internal class FailedToAddPackageToPackageRepositoryException : Exception
+    public class FailedToAddPackageToPackageRepositoryException : Exception
     {
         public FailedToAddPackageToPackageRepositoryException(string message) : base(message)
         {
